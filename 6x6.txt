@@ -1,0 +1,6 @@
+3a b b b c c
+ a d e2b3c f
+ a e e e c g
+ a h e i c g
+ a h i i i g
+ h h h i3g g
