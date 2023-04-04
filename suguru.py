@@ -13,6 +13,9 @@ class Cell():
     def __repr__(self) -> str:
         return f'({self.i}, {self.j}, {self.block}, {self.marks})'
 
+    def __hash__(self) -> int:
+        return hash((self.i, self.j))
+
 class Suguru():
     def __init__(self):
         self.blocks = defaultdict(list[Cell])
@@ -54,10 +57,12 @@ class Suguru():
     def print_progress(self):
         pass
 
-    def solve(self):
+    def solve_step(self):
         self.__propagate_block()
-        self.__propagate_neighbors()
+        self.__propagate_solved_to_neighbors()
         self.__pairs_in_block()
+        self.__block_single_pos()
+        self.__propagate_marks()
 
     def __propagate_block(self):
         # In a block, propagate solved cells to others
@@ -79,7 +84,7 @@ class Suguru():
                 neighbors.append(self.grid[i][j])
         return neighbors 
 
-    def __propagate_neighbors(self):
+    def __propagate_solved_to_neighbors(self):
         # Remove solved cell value from neighbor cells 
         for line in self.grid:
             for cell in line:
@@ -99,7 +104,34 @@ class Suguru():
                     for cell in block:
                         if not cell.solved() and cell.marks != marks:
                             cell.marks -= marks
+    
+    def __block_single_pos(self):
+        # If a value is only possible in one place in a block, then set it
+        for block in self.blocks.values():
+            val_cells = defaultdict(list)
+            for cell in block:
+                for val in cell.marks:
+                    val_cells[val].append(cell)
+            for val, cells in val_cells.items():
+                if len(cells) == 1 and not cells[0].solved():
+                    cells[0].marks = {val}
 
+    def __propagate_marks(self):
+        # If cells in a block have a mark 
+        for block in self.blocks.values():
+            unsolved = set()
+            for c in block:
+                if not c.solved():
+                    unsolved |= c.marks
+            for val in unsolved:
+                cells_with_val = set(c for c in block if val in c.marks)
+                if len(cells_with_val):
+                    #See if cells have common neighbors:
+                    neighbors = [set(self.__neighbors(c)) for c in cells_with_val]
+                    common = set.intersection(*neighbors)
+                    for cell in common:
+                        if val in cell.marks:
+                            cell.marks -= {val}
 
     def __repr__(self) -> str:
         grid = []
@@ -112,18 +144,22 @@ class Suguru():
             grid.append(' '.join(line))
         return '\n'.join(grid)
 
-s = Suguru()
-fname = '6x6.txt'
+def main():
+    s = Suguru()
+    fname = '6x6.txt'
 
-s.parseFile(fname)
-print(s)
-print(s.get_solved_count())
-print()
-
-for _ in range(10):
-    s.solve()
+    s.parseFile(fname)
     print(s)
     print(s.get_solved_count())
-    if s.is_solved():
-        break
     print()
+
+    for _ in range(10):
+        s.solve_step()
+        print(s)
+        print(s.get_solved_count())
+        if s.is_solved():
+            break
+        print()
+
+if __name__ == '__main__':
+    main()
