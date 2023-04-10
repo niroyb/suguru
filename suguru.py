@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+
 class Cell():
     def __init__(self, i, j, block) -> None:
         self.i = i
@@ -11,26 +12,26 @@ class Cell():
         return self.marks and len(self.marks) == 1
 
     def __repr__(self) -> str:
-        return f'({self.i}, {self.j}, {self.block}, {self.marks})'
+        return f"({self.i}, {self.j}, {self.block}, {self.marks})"
 
     def __hash__(self) -> int:
         return hash((self.i, self.j))
 
 class Suguru():
-    def __init__(self):
+    def __init__(self) -> None:
         self.blocks = defaultdict(list[Cell])
         self.grid = [] #2D array
         self.width = None
         self.height = None
 
     def parseFile(self, fname):
-        with open(fname, 'r') as f:
+        with open(fname) as f:
             for i, line in enumerate(f.read().splitlines()):
                 cells = []
                 for j in range(len(line)//2):
                     val, block = line[2*j:2*j+2]
                     c = Cell(i, j, block)
-                    if val != ' ':
+                    if val != " ":
                         c.marks = {int(val)}
                     self.blocks[block].append(c)
                     cells.append(c)
@@ -82,10 +83,10 @@ class Suguru():
             j += cell.j
             if (0 <= i < self.height) and (0<= j < self.width):
                 neighbors.append(self.grid[i][j])
-        return neighbors 
+        return neighbors
 
     def __propagate_solved_to_neighbors(self):
-        # Remove solved cell value from neighbor cells 
+        # Remove solved cell value from neighbor cells
         for line in self.grid:
             for cell in line:
                 if cell.solved():
@@ -104,7 +105,7 @@ class Suguru():
                     for cell in block:
                         if not cell.solved() and cell.marks != marks:
                             cell.marks -= marks
-    
+
     def __block_single_pos(self):
         # If a value is only possible in one place in a block, then set it
         for block in self.blocks.values():
@@ -117,14 +118,14 @@ class Suguru():
                     cells[0].marks = {val}
 
     def __propagate_marks(self):
-        # If cells in a block have a mark 
+        # If cells in a block have a mark
         for block in self.blocks.values():
             unsolved = set()
             for c in block:
                 if not c.solved():
                     unsolved |= c.marks
             for val in unsolved:
-                cells_with_val = set(c for c in block if val in c.marks)
+                cells_with_val = {c for c in block if val in c.marks}
                 if len(cells_with_val):
                     #See if cells have common neighbors:
                     neighbors = [set(self.__neighbors(c)) for c in cells_with_val]
@@ -140,13 +141,13 @@ class Suguru():
             for j in range(self.width):
                 c = self.get_cell(i, j)
                 marks = "".join(map(str, sorted(c.marks)))
-                line.append(f'{c.block}:{marks.ljust(5)}')
-            grid.append(' '.join(line))
-        return '\n'.join(grid)
+                line.append(f"{c.block}:{marks.ljust(5)}")
+            grid.append(" ".join(line))
+        return "\n".join(grid)
 
 def main():
     s = Suguru()
-    fname = '6x6.txt'
+    fname = "6x6.txt"
 
     s.parseFile(fname)
     print(s)
@@ -161,5 +162,5 @@ def main():
             break
         print()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
